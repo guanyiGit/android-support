@@ -1,0 +1,18 @@
+spring:
+  datasource:
+        username: all@shl
+        password: all@@shl
+        driver-class-name: com.mysql.jdbc.Driver
+        url: jdbc:mysql://223.221.36.183:3306/android-support?useUnicode=true&characterEncoding=utf8&useSSL=false
+#    username: root
+#    password: 123456
+#    driver-class-name: com.mysql.jdbc.Driver
+#    url: jdbc:mysql://192.168.0.69:3308/android-support?useUnicode=true&characterEncoding=utf8&useSSL=false
+
+logging:
+  level:
+    root: INFO
+    org.apache.http: DEBUG
+    com.soholy.cb: DEBUG
+
+

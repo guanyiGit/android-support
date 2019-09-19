@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>上传升级包</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/css/layui.mobile.css">
+    <link rel="stylesheet" href="/static/zTree_v3/css/zTreeStyle/zTreeStyle.css">
+    <link rel="stylesheet" href="/static/web-upload/webuploader.css">
+    <script src="/static/layui/layui.all.js"></script>
+    <script src="/static/jquery-1.12.1.js"></script>
+    <script src="/static/zTree_v3/js/jquery.ztree.core.min.js"></script>
+    <script src="/static/axios.js"></script>
+    <script src="/static/web-upload/webuploader.js"></script>
+    <script src="/static/md5Utils.js"></script>
+    <script src="/static/core.js"></script>
+    <script src="/static/md5.js"></script>
+
+
+    <script src="http://cdn.bootcss.com/blueimp-md5/1.1.0/js/md5.min.js"></script>
+</head>
+<body>
+
+<div class="layui-container ltu-tcnt" style="margin-top: 10px;">
+
+    <div class="layui-row">
+        <div class="layui-col-md12">
+            <ul class="layui-nav" lay-filter="">
+                <li class="layui-nav-item"><a href="/view">版本列表</a></li>
+                <li class="layui-nav-item layui-this"><a href="/view/upload">上传升级包</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <fieldset class="layui-elem-field layui-field-title"></fieldset>
+
+    <div class="layui-row">
+        <div class="layui-col-md3">
+            <form class="layui-form" action="">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">所属平台：</label>
+                    <div class="layui-input-block">
+                        <select class="seelct_changd">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="layui-row">
+        <div class="layui-col-md12">
+            <table class="layui-table">
+                <colgroup>
+                    <col width="50">
+                    <col width="50">
+                    <col width="50">
+                    <col width="50">
+                    <col width="50">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th>文件名</th>
+                    <th>大小</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody class="fileBody">
+<!--                    <tr>-->
+<!--                        <td>name</td>-->
+<!--                        <td>name2</td>-->
+<!--                        <td>等待上传</td>-->
+<!--                        <td>-->
+<!--                            <button class="layui-btn layui-btn-xs demo-reload">重传layui-hide</button>-->
+<!--                            <button class="layui-btn layui-btn-xs layui-btn-danger">删除</button>-->
+<!--                        </td>-->
+<!--                    </tr>-->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="layui-row">
+        <div class="layui-col-md1">
+            <div id="upliad-picker" style="width: 90px;">选择文件</div>
+        </div>
+        <div class="layui-col-md1">
+            <button type="button" class="layui-btn layui-btn-normal submit-upload" style="margin-left: 15px;">开始上传</button>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
+<script>
+    let baseurl = '';
+
+    $(document).ready(function () {
+        initOptions()
+
+        $("body").on("click",'.file-del',function(){
+            const fId = $(this).attr("data-id");
+            uploader.removeFile(fId);
+            let delTr = $(".fileBody").find("tr[data-id="+fId+"]")
+            delTr.detach()
+        })
+        $(".submit-upload").click(function(){
+            if (!$(".seelct_changd option:selected").val()) {
+                layer.msg('必须选择所属平台，再上传！');
+                return false;
+            }
+            uploader.upload()
+        })
+
+    })
+
+    function initOptions() {
+        axios.get(baseurl + "/pletforms").then(res => {
+            const eles = res.data.obj.records.filter(x => x && x.plSeq).map(x => {
+                return `<option value="${x.plSeq}">${x.plName}</option>`;
+            })
+            $(".seelct_changd").append(eles)
+            layui.use('form', function () {
+                const form = layui.form
+                form.render();
+            })
+        })
+    }
+
+
+    //添加item
+    function additem(url,fId) {
+        axios.post("/pk/save", null, {
+            params: {
+                pkUrl: url,
+                platformId: $(".seelct_changd option:selected").val()
+            }
+        }).then(res => {
+                const $elTr = $(".fileBody").find("tr[data-id="+fId+"]")
+                const $MsgTd = $elTr.find("td[data-stat]")
+            if (res.data.success) {
+                $MsgTd.text("上传成功！")
+                $MsgTd.toggleClass("activeBl")
+            } else {
+                layer.msg('一个软件包信息失败！');
+                $MsgTd.text("上传失败！")
+                $MsgTd.toggleClass("activeBe")
+            }
+        })
+
+    }
+
+
+
+    const uploader = WebUploader.create({
+        // swf文件路径
+        swf:  '/static/webuploader/Uploader.swf',
+        // 文件接收服务端。
+        server: baseurl+'/file/upload/batch',
+        // 选择文件的按钮。可选。
+        // 内部根据当前运行是创建，可能是input元素，也可能是flash.
+        pick: '#upliad-picker',
+        // 不压缩image, 默认如果是jpeg，文件上传前会压缩一把再上传！
+        resize: false,
+        auto: false,
+        //单个文件大小限制
+        fileSingleSizeLimit: 500 * 1024 * 1024,
+        //上传文件数量限制
+        fileNumLimit:10,
+    });
+
+    // 当有文件被添加进队列的时候
+    uploader.on( 'fileQueued', function( file ) {
+        if(file.size >1024 && file.size <= 1024*1024){
+            file.__size = file.size/1024 +'kb'
+        }else if(file.size >1024*1024 && file.size <= 1024*1024*1024){
+            file.__size = file.size/(1024*1024) +'mb'
+        }else if(file.size >1024*1024*1024 && file.size <= 1024*1024*1024*1024){
+            file.__size = file.size/(1024*1024*1024) +'gb'
+        }
+        let $ele = ['<tr data-id='+file.id+'>',
+                    '<td>'+file.name+'</td>',
+                    '<td>'+file.__size+'</td>',
+                    '<td data-stat>等待上传</td>',
+                    '<td>',
+                        // '<button class="layui-btn layui-btn-xs demo-reload" data-id='+file.id+'>重传layui-hide</button>',
+                        '<button class="layui-btn layui-btn-xs layui-btn-danger file-del" data-id='+file.id+'>移除</button>',
+                    '</td>',
+                '</tr>'].join(" ")
+
+        $(".fileBody").append($ele)
+
+
+        let fils = $(".webuploader-element-invisible")
+
+        console.log(file)
+        // console.log(hex_md5(encodeURIComponent(file)))
+        // console.log(hex_md5(file))
+        // console.log(hex_md5(encodeURIComponent(file.getSource())))
+
+        uploader.md5File(file,0,file.size)
+            // 及时显示进度
+            .progress(function(percentage) {
+                console.log('Percentage:', percentage);
+            })
+
+            // 完成
+            .then(function(val) {
+                console.log('md5 result:', val);
+            });
+
+        uploader.refresh()
+    });
+
+    //单个文件上传成功
+    uploader.on("uploadSuccess", function(file,res){
+        const url = res.obj[0].url;
+        additem(url,file.id)
+    });
+
+    uploader.on("uploadStart", function(file){
+        const $elTr = $(".fileBody").find("tr[data-id="+file.id+"]")
+        const $MsgTd = $elTr.find("td[data-stat]")
+        $MsgTd.text("正在上传...")
+        $MsgTd.toggleClass("activeBs")
+    });
+
+    uploader.on("uploadError",function(file,res){
+        const $elTr = $(".fileBody").find("tr[data-id="+file.id+"]")
+        const $MsgTd = $elTr.find("td[data-stat]")
+        $MsgTd.text("上传失败！")
+        $MsgTd.toggleClass("activeBe")
+        layer.msg('一个文件上传失败！');
+    });
+
+    layui.use('form', function () {
+        const form = layui.form
+        form.render();
+    })
+
+</script>
+
+
+<style>
+    .activeBl{
+        color: #00b7ee;
+    }
+    .activeBs{
+        color: #1EB8EC;
+    }
+    .activeBs{
+        color: #1EB8EC;
+    }
+    .activeBe{
+        color: #FC542E;
+    }
+
+</style>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.testscan"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="19"
+        android:targetSdkVersion="28" />
+    <!-- 系统的网络状态访问权限声明 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 获取手机唯一标识 -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <!-- Toast权限 -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <!-- 安装权限清单 -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
+    <application
+        android:allowBackup="true"
+        android:appComponentFactory="android.support.v4.app.CoreComponentFactory"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme" >
+        <activity android:name="com.example.dogshelter.ChangePasswordActivity" />
+        <activity android:name="com.example.dogshelter.SingleMessageActivity" />
+        <activity android:name="com.example.dogshelter.SetUpActivity" />
+        <activity android:name="com.example.dogshelter.LawPenaltyActivity" />
+        <activity android:name="com.example.dogshelter.HomeladDogShelterDetail" />
+        <activity android:name="com.example.dogshelter.HomeladDogShelter" />
+        <activity android:name="com.example.dogshelter.DogInquiryDetail" />
+        <activity android:name="com.example.dogshelter.DogInquiry" />
+        <activity android:name="com.example.dogshelter.UHTReadTag" />
+        <activity android:name="com.example.dogshelter.DetailActivity" />
+        <activity android:name="com.example.dogshelter.DogMessageDetial" />
+        <activity android:name="com.example.dogshelter.LawEnforcement" />
+        <activity android:name="com.example.dogshelter.HomePageActivity" />
+        <activity android:name="com.example.dogshelter.LunchAcitvity" >
+
+            <!-- android:theme="@style/LunchTheme" -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.example.dogshelter.MainActivity" />
+        <activity android:name="com.example.loadPhoto.PlusImageActivity" />
+
+        <provider
+            android:name="com.luck.picture.lib.PictureFileProvider"
+            android:authorities="com.example.testscan.provider"
+            android:exported="false"
+            android:grantUriPermissions="true" >
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <activity
+            android:name="com.luck.picture.lib.PictureSelectorActivity"
+            android:windowSoftInputMode="adjustPan" />
+        <activity android:name="com.luck.picture.lib.PicturePreviewActivity" />
+        <activity
+            android:name="com.luck.picture.lib.PictureVideoPlayActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:screenOrientation="sensor" />
+        <activity android:name="com.luck.picture.lib.PictureExternalPreviewActivity" />
+        <activity android:name="com.yalantis.ucrop.UCropActivity" />
+        <activity android:name="com.yalantis.ucrop.PictureMultiCuttingActivity" />
+        <activity android:name="com.luck.picture.lib.PicturePlayAudioActivity" />
+    </application>
+
+</manifest>

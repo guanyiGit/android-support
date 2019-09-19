@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>软件包下载</title>
+    <link rel="stylesheet" href="../static/layui/css/layui.css">
+    <link rel="stylesheet" href="../static/zTree_v3/css/zTreeStyle/zTreeStyle.css">
+    <script src="../static/layui/layui.all.js"></script>
+    <script src="../static/jquery-1.12.1.js"></script>
+    <script src="../static/zTree_v3/js/jquery.ztree.core.min.js"></script>
+    <script src="../static/axios.js"></script>
+</head>
+<body>
+<div class="layui-fluid ltu-tcnt" style="margin-top: 10px;">
+<!--<div class="layui-container ltu-tcnt" style="margin-top: 10px;">-->
+    <div class="layui-row">
+        <div class="layui-col-md12">
+            <ul class="layui-nav" lay-filter="">
+                <li class="layui-nav-item layui-this"><a href="javascript:;">软件包下载</a></li>
+            </ul>
+        </div>
+    </div>
+    <fieldset class="layui-elem-field layui-field-title"></fieldset>
+    <div class="layui-row">
+        <div class="layui-col-md3">
+            <form class="layui-form" action="">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">所属平台：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="platform" value="宿州" disabled required lay-verify="required"
+                               autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="layui-col-md3">
+
+        </div>
+        <div class="layui-col-md4">
+
+        </div>
+        <div class="layui-col-md1">
+        </div>
+        <div class="layui-col-md1">
+        </div>
+    </div>
+    <fieldset class="layui-elem-field layui-field-title"></fieldset>
+    <div class="layui-row ">
+        <table class="layui-table" lay-size="lg">
+            <colgroup>
+                <col width="50">
+                <col width="50">
+                <col width="50">
+                <col width="50">
+                <col width="50">
+                <col width="50">
+                <col width="50">
+            </colgroup>
+            <thead>
+            <tr>
+                <th>包序号</th>
+                <th>品台名称</th>
+                <th>域名</th>
+                <th>版本</th>
+                <th>标示</th>
+                <th>创建时间</th>
+                <th style="min-width: 20px;">操作</th>
+            </tr>
+            </thead>
+            <tbody class="data-tbody">
+                <tr th:attr="data-id=${item.vSeq}" th:each="item,infoStat : ${download}">
+                    <td th:text="${infoStat.index}"></td>
+                    <td th:class="content" th:attr="data-id=${item.vSeq}" th:text="${item.plName}"></td>
+                    <td th:text="${item.addr}"></td>
+                    <td th:text="${item.versionInfo}">  x.versionInfo  </td>
+                    <td th:text="${item.make ==1 ?'启动':'其他'}"></td>
+                    <td th:text="${item.creationTime}">  x.creationTime  </td>
+                    <td >
+                        <button data-method="notice" class="layui-btn layui-btn-sm download" style="width: 130px;height: 35px;" th:attr="pkUrl=${item.pkUrl}">下载</button>
+                    </td>
+                </tr>;
+            </tbody>
+
+        </table>
+    </div>
+
+    <div class="layui-row">
+        <fieldset class="layui-elem-field layui-field-title"></fieldset>
+        <div id="main-page"></div>
+    </div>
+</div>
+</body>
+<script>
+    let baseurl = ''
+
+    const params = {
+        __list: [],
+        pageNum: '1',
+        pageSize: '8',
+        total: 0,
+        plSeq: 1,
+        make: null,
+        keyWord: null
+    }
+
+    function clickHandle(){
+        alert(1)
+    }
+
+    $(document).ready(function () {
+        //lists
+        // initList()
+
+        //modify stat
+        $("body").on("click",".download",function(){
+            const indexs = layer.load(3);
+            // let vSeq = $(this).parents("tr").attr("data-id")//版本id
+            // let item = params.__list.find(x=>x.vSeq == vSeq)
+            // let stat = 0;
+            // debugger
+            // if(item.make === 0){//未启用
+            //     stat = 1;//启用
+            // }else if(item.make === 1){//启用
+            //     stat = 2;//禁用
+            // }else if(item.make === 2){//禁用
+            //     stat = 1;//启用
+            // }
+            // location.href = item.pkUrl
+
+
+            location.href = $(this).attr("pkUrl")
+            layer.close(indexs)
+        })
+
+    })
+
+
+    function initList() {
+        let data = {...params}
+        delete data.__list
+        axios.get(baseurl + "/versions", {params: data}).then(res => {
+            $(".data-tbody").html("")
+            let tb_html = '<p style=" width: 100px;">暂无内容！！！<p>'
+            if (res.data.obj.records && res.data.obj.records.length > 0) {
+                tb_html = res.data.obj.records.map((x, i) => {
+                    const make_type = x.make || x.make === 0 ? (
+                        x.make === 0 ? '未启用' :
+                            x.make === 1 ? '启用' : '已禁用'
+                    ) : '-';
+                    if (1 === x.make) {
+                        let btn = '<button data-method="notice" class="layui-btn layui-btn-sm download" style="width: 130px;height: 35px;">下载</button>';
+                        return '<tr data-id="' + x.vSeq + '">'
+                            + '<td>' + ((i + 1) + ((params.pageNum - 1) * params.pageSize)) + '</td>'
+                            + '<td class="content" data-id="' + x.vSeq + '">' + x.plName + '</td>'
+                            + '<td>' + x.addr + '</td>'
+                            // + '<td>' + x.ipInfo + '</td>'
+                            + '<td>' + x.versionInfo + '</td>'
+                            + '<td>' + make_type + '</td>'
+                            + '<td>' + x.creationTime + '</td>'
+                            + '<td>' + btn + '</td>'
+                            + '</tr>';
+                    }
+                })
+                params.__list = res.data.obj.records;
+            }
+            $(".data-tbody").html(tb_html)
+            params.total = res.data.obj.total;
+
+
+            layui.use(['laypage', 'layer'], function () {
+                const laypage = layui.laypage
+                //总页数大于页码总数
+                laypage.render({
+                    elem: 'main-page',
+                    curr: params.pageNum,
+                    count: params.total, //数据总数
+                    limit: params.pageSize,
+                    jump: function (obj, first) {
+                        if (!first) {
+                            params.pageNum = obj.curr
+                            initList()
+                        }
+                    }
+                });
+            });
+        })
+    }
+
+
+    layui.use('form', function () {
+        const form = layui.form
+        form.render();
+
+        //seelct_changd chang
+
+    })
+
+
+    /**
+     *
+     * @param index
+     * @param shardCount 总片数
+     * @param file 文件
+     * @param size 总大小
+     * @param name 文件名
+     * @param uuid
+     * @param date
+     * @param filemd5
+     */
+    function getMd5List(index, shardCount, file, size, name, uuid, date, filemd5) {
+        shardCount = shardCount | Math.ceil(size / shardSize);
+
+        let self = this
+        if (index < shardCount) {
+            let shardSize = self.sizes
+            //计算每一片的起始与结束位置
+            var start = index * shardSize;
+            var end = Math.min(size, start + shardSize);
+            // 生成 Md5 ， 将文件切割后 ， 将 切割后的 文件 读入内存中 　
+            var singleFile = file.slice(start, end);
+            // 计算出 md5 值
+            browserMD5File(singleFile, function (err, md5) {
+                // 验证并上传
+                self.checkUploadFile(md5, uuid, name, size, shardCount, filemd5, date, index, singleFile)
+                // 索引加一
+                index = index + 1
+                // 递归执行
+                self.getMd5List(index, shardCount, file, size, name, uuid, date, filemd5)
+            });
+            // 计算进度
+            var progress = parseInt(((index + 1) / shardCount) * 100)
+            self.percent = progress
+            console.log(self.percent)
+            if (self.percent === 100) {
+                self.status = '准备完毕，提交中...'
+            }
+        }
+
+        if (index == shardCount) {
+            console.log("计算结束 ")
+            console.log("总片数" + shardCount)
+        }
+    }
+
+
+</script>
+<style>
+    body{
+        font-size: 15px;
+    }
+    .layui-table{
+        font-size: 15px;
+    }
+</style>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>android-support</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/zTree_v3/css/zTreeStyle/zTreeStyle.css">
+    <script src="/static/layui/layui.all.js"></script>
+    <script src="/static/jquery-1.12.1.js"></script>
+    <script src="/static/zTree_v3/js/jquery.ztree.core.min.js"></script>
+    <script src="/static/axios.js"></script>
+</head>
+<body>
+<div class="layui-container ltu-tcnt" style="margin-top: 10px;">
+    <div class="layui-row">
+        <div class="layui-col-md12">
+            <ul class="layui-nav" lay-filter="">
+                <li class="layui-nav-item layui-this"><a href="/view">版本列表</a></li>
+                <li class="layui-nav-item"><a href="/view/upload">上传升级包</a></li>
+            </ul>
+        </div>
+    </div>
+    <fieldset class="layui-elem-field layui-field-title"></fieldset>
+    <div class="layui-row">
+        <div class="layui-col-md3">
+            <form class="layui-form" action="">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">所属平台：</label>
+                    <div class="layui-input-block">
+                        <select class="seelct_changd" lay-filter="seelct_changd">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="layui-col-md3">
+            <form class="layui-form" action="">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">使用状态：</label>
+                    <div class="layui-input-block">
+                        <select class="seelct_changd_stat" lay-filter="seelct_changd_stat">
+                            <option value="">全选</option>
+                            <option value="1">未启用</option>
+                            <option value="2">启用</option>
+                            <option value="3">禁用</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="layui-col-md4">
+            <input type="text" name="title" required lay-verify="required" placeholder="输入ip、域名查找" autocomplete="off"
+                   class="layui-input ele-serch-input">
+        </div>
+        <div class="layui-col-md1">
+            <button type="button" class="layui-btn layui-btn-normal ele-serch">搜索</button>
+        </div>
+        <div class="layui-col-md1">
+            <a class="layui-btn" href="/view/upload" style="margin-left: -20px; padding: 0 10px;">
+                <i class="layui-icon">&#xe608;</i> 上传升级包
+            </a>
+        </div>
+    </div>
+    <fieldset class="layui-elem-field layui-field-title"></fieldset>
+    <div class="layui-row ">
+        <table class="layui-table">
+            <colgroup>
+                <col width="2">
+                <col width="50">
+                <col width="50">
+                <col width="50">
+                <col width="50">
+                <col width="50">
+                <col width="100">
+                <col width="100">
+            </colgroup>
+            <thead>
+            <tr>
+                <th>序号</th>
+                <th>品台名称</th>
+                <th>域名</th>
+                <th>平台ip</th>
+                <th>版本信息</th>
+                <th>启用标示</th>
+                <th>创建时间</th>
+                <th style="min-width: 120px;">操作</th>
+            </tr>
+            </thead>
+            <tbody class="data-tbody">
+
+            </tbody>
+        </table>
+    </div>
+
+    <div class="layui-row">
+        <fieldset class="layui-elem-field layui-field-title"></fieldset>
+        <div id="main-page"></div>
+    </div>
+</div>
+</body>
+<script>
+    let baseurl = ''
+
+    const params = {
+        __list: [],
+        pageNum: '1',
+        pageSize: '8',
+        total:0,
+        plSeq: null,
+        make:null,
+        keyWord: null
+    }
+
+    $(document).ready(function () {
+        //lists
+        initList()
+
+        //options
+        initOptions()
+
+        //search
+        $(".ele-serch").click(function () {
+            let input = $(".ele-serch-input").val();
+            if (input) {
+                input = input.trim();
+                params.keyWord = input;
+                params.pageNum = 1;
+                initList()
+            } else {
+                layer.msg('没有输入内容');
+            }
+        })
+
+        //information detail
+        //触发事件
+        let alt_content = '';
+        let active = {
+            notice: function () {
+                //示范一个公告层
+                layer.open({
+                    type: 1 ,
+                    title: false, //不显示标题栏
+                    closeBtn: false,
+                    area: '800px;',
+                    shade: 0.8,
+                    id: 'LAY_layuipro', //设定一个id，防止重复弹出
+                    btn: ['ok', 'clean'],
+                    btnAlign: 'c',
+                    moveType: 1, //拖拽模式，0或者1
+                    // ,content:alt_content
+                    content: '<div style="padding: 50px; line-height: 22px; background-color: #393D49; color: #fff; font-weight: 300;">详细信息：<br><br>' + alt_content + '<br><br></div>',
+                    success: function (layero) {
+                        var btn = layero.find('.layui-layer-btn');
+                    }
+                });
+            }
+        };
+        $('.ltu-tcnt').on('click', '.detail', function () {
+            alt_content = $($(this).parent().parent().children(".content")[0]).attr("data-id")
+            let temp = params.__list.find(x => x.vSeq == alt_content)
+            const make_type = temp.make || temp.make === 0 ? (
+                temp.make === '0' ? '未启用' :
+                temp.make === '1' ? '启用' : '已禁用'
+            ) : '-';
+
+            alt_content = "版本信息：" + temp.versionInfo + '</br>'
+            alt_content += "启用标示：" + make_type + '</br>'
+            alt_content += "包url：" + temp.pkUrl + '</br>'
+            alt_content += "版本创建时间：" + temp.creationTime + '</br>'
+            alt_content += "品台名称：" + temp.plName + '</br>'
+            alt_content += "平台ip：" + temp.ipInfo + '</br>'
+            alt_content += "域名地址：" + temp.addr + '</br>'
+            alt_content += "平台创建时间：" + temp.plCreationTime + '</br>'
+            // alt_content = JSON.stringify(params.__list.find(x => x.vSeq == alt_content))
+            let method = $(this).data('method');
+            active[method] ? active[method].call(this, $(this)) : '';
+        })
+
+        //modify stat
+        $("body").on("click",".changdItem",function(){
+            const indexs = layer.load(3);
+            let vSeq = $(this).parents("tr").attr("data-id")
+            let item = params.__list.find(x=>x.vSeq == vSeq)
+            let stat = 0;
+            if(item.make === 0){//未启用
+                stat = 1;//启用
+            }else if(item.make === 1){//启用
+                stat = 2;//禁用
+            }else if(item.make === 2){//禁用
+                stat = 1;//启用
+            }
+            axios.put(baseurl+"/pk/"+item.vSeq,null,{params:{stat}}).then(res=>{
+                if(res.data.success){
+                    layer.msg("修改成功！")
+                    initList()
+                }else{
+                    layer.msg("修改失败！")
+                }
+            }).finally(_=>{layer.close(indexs)})
+        })
+
+        //del item
+        $("body").on("click",".delItem",function(){
+            const _this = this;
+            layer.confirm('确定要删除这条记录吗？', {
+                btn: ['删除','取消'],
+                time: 200000, //20s后自动关闭
+            },function(index){
+                let vSeq = $(_this).parents("tr").attr("data-id")
+                let item = params.__list.find(x=>x.vSeq == vSeq)
+                axios.delete(baseurl+"/pk/"+item.vSeq).then(res=>{
+                    if(res.data.success){
+                        layer.msg("删除成功！")
+                        initList()
+                    }else{
+                        layer.msg("删除失败！")
+                    }
+                }).finally(_=>{
+                    layer.close(index);
+                })
+            },function(){
+                layer.msg("已取消！")
+            });
+        })
+
+
+    })
+
+    function initOptions() {
+        axios.get(baseurl + "/pletforms").then(res => {
+            const eles = res.data.obj.records.filter(x => x && x.plSeq).map(x => {
+                return `<option value="${x.plSeq}">${x.plName}</option>`;
+            })
+            $(".seelct_changd").append(eles)
+            layui.use('form', function () {
+                const form = layui.form
+                form.render();
+
+                //seelct_changd chang
+                form.on('select(seelct_changd)', function(data){
+                    const plSeq = data.value;
+                    if (plSeq) {
+                        params.plSeq = plSeq;
+                    }else{
+                        params.plSeq = null;
+                    }
+                    params.pageNum = 1;
+                    initList()
+                })
+            })
+        })
+    }
+
+    function initList() {
+        let data  = {...params}
+        delete  data.__list
+        axios.get(baseurl + "/versions", {params:data}).then(res => {
+            $(".data-tbody").html("")
+            let tb_html = '<p style=" width: 100px;">暂无内容！！！<p>'
+            if (res.data.obj.records && res.data.obj.records.length > 0) {
+                tb_html = res.data.obj.records.map((x,i) => {
+                    const make_type = x.make || x.make === 0 ? (
+                        x.make === 0 ? '未启用' :
+                        x.make === 1 ? '启用' : '已禁用'
+                    ) : '-';
+                    let btn = '<button data-method="notice" class="layui-btn layui-btn-sm detail" style="margin-left: 5px;">详情</button>';
+                    btn += '<button data-method="notice" style="margin-left: 5px;" class="layui-btn '+( x.make === 0 || x.make === 2 ?'layui-btn-normal':'layui-btn-warm' )+' layui-btn-sm changdItem">'+ ( x.make === 0 || x.make === 2 ?'启用':'禁用' ) +'</button>';
+                    btn += '<button data-method="notice" class="layui-btn layui-btn-danger layui-btn-sm delItem" style="margin-left: 5px;">删除</button>';
+                    return '<tr data-id="'+x.vSeq+'">'
+                        + '<td>' + ((i+1)+((params.pageNum-1)*params.pageSize)) + '</td>'
+                        + '<td class="content" data-id="' + x.vSeq + '">' + x.plName + '</td>'
+                        + '<td>' + x.addr + '</td>'
+                        + '<td>' + x.ipInfo + '</td>'
+                        + '<td>' + x.versionInfo + '</td>'
+                        + '<td>' + make_type + '</td>'
+                        + '<td>' + x.creationTime + '</td>'
+                        + '<td>' + btn + '</td>'
+                        + '</tr>';
+                })
+                params.__list = res.data.obj.records;
+            }
+            $(".data-tbody").html(tb_html)
+            params.total = res.data.obj.total;
+
+
+            layui.use(['laypage', 'layer'], function () {
+                const laypage = layui.laypage
+                //总页数大于页码总数
+                laypage.render({
+                    elem: 'main-page',
+                    curr: params.pageNum,
+                    count: params.total, //数据总数
+                    limit: params.pageSize,
+                    jump: function (obj, first) {
+                        if (!first) {
+                            params.pageNum = obj.curr
+                            initList()
+                        }
+                    }
+                });
+            });
+        })
+    }
+
+
+    layui.use('form', function () {
+        const form = layui.form
+        form.render();
+
+        //seelct_changd chang
+        form.on('select(seelct_changd_stat)', function(data){
+            let make = data.value;
+            if (make) {
+                params.make = make-1;
+            }else{
+                params.make = null;
+            }
+            params.pageNum = 1;
+            initList()
+        })
+    })
+
+
+    /**
+     *
+     * @param index
+     * @param shardCount 总片数
+     * @param file 文件
+     * @param size 总大小
+     * @param name 文件名
+     * @param uuid
+     * @param date
+     * @param filemd5
+     */
+   function getMd5List(index, shardCount, file, size, name, uuid, date, filemd5) {
+        shardCount = shardCount | Math.ceil(size / shardSize);
+
+        let self = this
+        if (index < shardCount){
+            let shardSize = self.sizes
+            //计算每一片的起始与结束位置
+            var start = index * shardSize;
+            var end = Math.min(size, start + shardSize);
+            // 生成 Md5 ， 将文件切割后 ， 将 切割后的 文件 读入内存中 　
+            var singleFile = file.slice(start, end);
+            // 计算出 md5 值
+            browserMD5File(singleFile, function (err, md5) {
+                // 验证并上传
+                self.checkUploadFile(md5, uuid, name, size, shardCount, filemd5, date, index, singleFile)
+                // 索引加一
+                index = index + 1
+                // 递归执行
+                self.getMd5List(index, shardCount, file, size, name, uuid, date, filemd5)
+            });
+            // 计算进度
+            var progress = parseInt(((index+1) / shardCount) * 100)
+            self.percent = progress
+            console.log(self.percent)
+            if (self.percent === 100) {
+                self.status = '准备完毕，提交中...'
+            }
+        }
+
+        if (index == shardCount){
+            console.log("计算结束 " )
+            console.log("总片数" + shardCount)
+        }
+    }
+
+
+</script>
+</html>

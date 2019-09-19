@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.soholy.mapper.TDogOwnerMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        dog_owner_id, district_id, community, dog_owner_type, dog_owner_name, dog_owner_phone, address, sex, e_mail, postal_code, status, creation_time, birth_date, ethnic, org_id, user_id
+    </sql>
+
+    <insert id="saveOwner">
+        <selectKey order="AFTER" keyProperty="dogOwnerId" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `t_dog_owner`
+        ( `district_id`, `community`, `dog_owner_type`, `dog_owner_name`, `dog_owner_phone`,
+        `address`, `sex`, `e_mail`, `postal_code`, `status`, `creation_time`, `birth_date`, `ethnic`, `org_id`,
+        `user_id`)
+        VALUES
+        (#{owner.districtId},#{owner.community},#{owner.dogOwnerType},#{owner.dogOwnerName},#{owner.dogOwnerPhone},
+        #{owner.address},#{owner.sex},#{owner.eMail},#{owner.postalCode},#{owner.status},#{owner.creationTime},#{owner.birthDate},#{owner.ethnic},#{owner.orgId},#{owner.userId})
+    </insert>
+
+    <insert id="saveOwnerCard">
+        <selectKey order="AFTER" keyProperty="dogOwnerCardId" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `t_dog_owner_card`
+        ( `dog_owner_id`, `card_type`, `card_num`, `start_time`, `end_time`, `creation_time`)
+        VALUES
+        (#{ownerCard.dogOwnerId}, #{ownerCard.cardType}, #{ownerCard.cardNum}, #{ownerCard.startTime},
+        #{ownerCard.endTime}, #{ownerCard.creationTime})
+    </insert>
+
+    <select id="finddDogTypeName" resultType="com.soholy.entity.test.TDictionary">
+        SELECT * from t_dictionary d
+        WHERE d.dictionary_describe LIKE concat('%',#{dogTypeName},'%')
+        AND d.dictionary_field = 'dog_breed_type'
+    </select>
+
+    <select id="finddDics" resultType="com.soholy.entity.test.TDictionary">
+        SELECT * from t_dictionary d WHERE d.dictionary_field = #{type}
+    </select>
+
+    <insert id="saveDogInfo">
+        <selectKey order="AFTER" keyProperty="dogId" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `t_dog_info`
+        (`dog_owner_id`, `dog_breed_type`, `dog_color_type`, `dog_name`, `birth_time`, `dog_gender`,
+        `dog_character`, `dog_remarks`, `weight`, `dog_status`, `cancellation_reason`, `cancellation_note`,
+        `cancellation_time`,
+        `deduction_sum`, `father_id`, `mother_id`, `health_status`, `operation_id`, `creation_time`, `dogAge`)
+        VALUES
+        (
+        #{dogInfo.dogOwnerId},#{dogInfo.dogBreedType},#{dogInfo.dogColorType},#{dogInfo.dogName},#{dogInfo.birthTime},#{dogInfo.dogGender},
+        #{dogInfo.dogCharacter},#{dogInfo.dogRemarks},#{dogInfo.weight},#{dogInfo.dogStatus},#{dogInfo.cancellationReason},#{dogInfo.cancellationNote},
+        #{dogInfo.cancellationTime},
+        #{dogInfo.deductionSum},#{dogInfo.fatherId},#{dogInfo.motherId},#{dogInfo.healthStatus},#{dogInfo.operationId},#{dogInfo.creationTime},#{dogInfo.dogAge}
+        )
+    </insert>
+
+    <insert id="saveImmuneCard">
+        <selectKey order="AFTER" keyProperty="seqId" resultType="java.lang.Integer">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `t_immune_card`
+        ( `dog_owner_id`, `dog_id`, `member_card_id`, `immune_card_num`, `start_time`,
+        `end_time`, `lssue_time`, `lssue_org_id`, `lssuer_id`, `status`, `creation_time`)
+        VALUES
+        (
+        #{immuneCard.dogOwnerId},#{immuneCard.dogId},#{immuneCard.memberCardId},#{immuneCard.immuneCardNum},#{immuneCard.startTime},
+        #{immuneCard.endTime},#{immuneCard.lssueTime},#{immuneCard.lssueOrgId},#{immuneCard.lssuerId},#{immuneCard.status},#{immuneCard.creationTime}
+        )
+    </insert>
+
+    <insert id="saveVaccineInjection">
+        <selectKey order="AFTER" keyProperty="vaccineInjectionId" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `t_vaccine_injection` (
+            `vaccine_register_id`, `vaccine_injection_count`, `injection_date`,`veterinarian`,
+            `fact_injection_date`, `next_injection_date`, `injection_status`, `operator_id`,
+            `create_date`, `remarks`, `vaccine_name`, `vaccine_producer`,
+            `vaccine_num`, `send`, `vac_org`, `dog_id`
+        ) VALUES (
+            #{injection.vaccineRegisterId}, #{injection.vaccineInjectionCount},#{injection.injectionDate},#{injection.veterinarian},
+            #{injection.factInjectionDate}, #{injection.nextInjectionDate}, #{injection.injectionStatus},#{injection.operatorId},
+            #{injection.createDate}, #{injection.remarks}, #{injection.vaccineName}, #{injection.vaccineProducer},
+            #{injection.vaccineNum}, #{injection.send}, #{injection.vacOrg}, #{injection.dogId}
+        )
+    </insert>
+
+    <select id="findOwnerByPhone" resultType="com.soholy.entity.test.TDogOwner">
+        SELECT * FROM t_dog_owner o WHERE o.dog_owner_phone = #{phone}
+    </select>
+
+</mapper>

@@ -1,0 +1,11 @@
+#登陆
+#Login=http://119.147.209.163:8081/support/biz/login
+Login=http://192.168.0.69:8889/support/biz/login
+#更新请求
+Update=https://qlw.soholy.cn:12000/platform/check?version=6&checkType=1&platform=1
+#犬只信息
+#DogMessage=http://119.147.209.163:8081/support/biz/dogCard/selectDogCardInfoByImeis
+DogMessage=http://192.168.0.69:8889/biz/dogCard/selectDogCardInfoByImeis
+#DogMessage=http://192.168.0.30:9001/biz/dogCard/selectDogCardInfoByImeis
+#犬只查询
+DogSearch=http://192.168.0.69:80/biz/dogAndOwner/selectDogListe
